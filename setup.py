@@ -13,12 +13,16 @@ try:
 except Exception:
     long_description = description
 
+version = "1.0.0"
+
 setup(
     name = "jsonrpc2-zeromq",
-    version = "1.0.0",
+    version = version,
     description = description,
     long_description = long_description,
     url = "https://github.com/wiltd/python-jsonrpc2-zeromq",
+    download_url = "https://github.com/wiltd/"
+                       "jsonrpc2-zeromq-python/tarball/v%s" % (version,),
     classifiers = [
         "Programming Language :: Python :: 2.7",
         "Development Status :: 5 - Production/Stable",
