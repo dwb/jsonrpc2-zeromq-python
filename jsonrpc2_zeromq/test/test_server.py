@@ -5,37 +5,10 @@
 
 import unittest
 import logging
-from time import sleep
-
-import zmq
 
 import jsonrpc2_zeromq
 
-
-class RPCTestServer(jsonrpc2_zeromq.RPCServer):
-
-    def handle_echo_method(self, msg):
-        return msg
-
-    def handle_dict_args_method(self, an_int=None, a_bool=None, a_float=None,
-                                a_str=None):
-        return dict(an_int=an_int, a_bool=a_bool, a_float=a_float, a_str=a_str)
-
-    def handle_return_null_method(self):
-        return None
-
-
-class RPCNotificationTestServer(jsonrpc2_zeromq.RPCNotificationServer):
-
-    def handle_echo_method(self, msg):
-        return msg
-
-
-class NotificationOnlyPullTestServer(jsonrpc2_zeromq.NotificationOnlyPullServer):
-
-    def handle_event_method(self, event_type, event_value):
-        # Do things!
-        pass
+from .helpers import *
 
 
 test_debug_logger = logging.getLogger('jsonrpc2_zeromq_test')
@@ -48,7 +21,7 @@ test_debug_logger.addHandler(logger_console_handler)
 class BaseServerTestCase(unittest.TestCase):
 
     endpoint = "inproc://jsonrpc2-zeromq-tests"
-    logger = None
+    logger = test_debug_logger
 
     def tearDown(self):
         self.server.stop()
@@ -95,6 +68,15 @@ class RPCServerTestCase(BaseServerTestCase):
         result = self.client.return_null()
         self.assertEqual(None, result)
 
+    def test_timeout(self):
+        self.client.timeout = RPCTestServer.long_time / 10
+        try:
+            self.client.take_a_long_time()
+        except jsonrpc2_zeromq.TimeoutError:
+            pass
+        else:
+            self.fail("Client didn't timeout")
+
 
 class RPCNotificationServerTestCase(BaseServerTestCase):
 
@@ -136,3 +118,36 @@ class NotificationOnlyPullServerTestCase(BaseServerTestCase):
         for i in xrange(100):
             self.client.notify.event("balloon launched", "number {0}".format(i))
 
+
+class NotificationReceiverClientTestCase(BaseServerTestCase):
+
+    def setUp(self):
+        self.server = NotificationReceiverClientTestServer(
+            endpoint=self.endpoint, logger=self.logger)
+        self.server.daemon = True
+        self.server.start()
+        self.client = NotificationReceiverTestClient(endpoint=self.endpoint,
+                                                     logger=self.logger)
+
+    def tearDown(self):
+        self.client.stop()
+        return super(NotificationReceiverClientTestCase, self).tearDown()
+
+    def test_subscribe(self):
+        self.client.subscribe()
+        self.client.join(
+            NotificationReceiverClientTestServer.notification_reply_sleep_time *
+            (NotificationReceiverClientTestServer.num_notification_replies + 1))
+
+        self.assertEqual(
+            NotificationReceiverClientTestServer.num_notification_replies,
+            self.client.num_notifications_received)
+
+    def test_timeout(self):
+        self.client.timeout = NotificationReceiverClientTestServer.long_time / 10
+        try:
+            self.client.take_a_long_time()
+        except jsonrpc2_zeromq.TimeoutError:
+            pass
+        else:
+            self.fail("Client didn't timeout")

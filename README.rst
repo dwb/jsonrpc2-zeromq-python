@@ -65,6 +65,19 @@ You can then send notifications thus::
 
 Also included are ``NotificationOnlyPullServer`` and ``NotifierOnlyPushClient`` which are designed for sending only notifications one-way over PUSH and PULL sockets.
 
+There is also a client, ``NotificationReceiverClient``, that is able to handle notifications returned back to it from a server. This is useful for situations where you "subscribe", via a standard RPC call, to events from the server, and they are returned back to the client as notifications when they occur. There is not currently a corresponding server class for this pattern. Here is a (one-sided) example::
+
+    from jsonrpc2_zeromq import NotificationReceiverClient
+
+    class EventSubscriber(NotificationReceiverClient):
+
+        def handle_event_notification(self, event_type, event_data):
+            print "Got event!\nType: {0}\nData: {1}\n".format(event_type, event_data)
+
+    c = EventSubscriber("tcp://127.0.0.1:60666")
+    c.subscribe()
+    c.wait_for_notifications()
+
 Logging
 -------
 

@@ -92,16 +92,7 @@ class RPCServer(common.Endpoint, threading.Thread):
                                       self.__class__.__name__)
 
     def _handle_method_and_response(self, client_id, req):
-        handler_id = req.method.lower().replace('-', '_')
-        handler = getattr(self, 'handle_{0}_method'.format(handler_id), None)
-        if handler is None:
-            raise common.MethodNotFound()
-
-        if isinstance(req.params, (tuple, list)):
-            result = handler(*req.params)
-        elif isinstance(req.params, dict):
-            result = handler(**req.params)
-
+        result = common.handle_request(self, 'handle_{method}_method', req)
         self._send_response(client_id, req, common.Response(result, None,
                                                             req.id))
 

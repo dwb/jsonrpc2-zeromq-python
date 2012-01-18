@@ -47,7 +47,7 @@ class RPCClient(common.Endpoint):
 
         self.request_poller.register(self.request_sock, zmq.POLLOUT)
         if not self.request_poller.poll(self.timeout):
-            self._reconnect_socket()
+            self.on_timeout(request)
             raise TimeoutError("Timed out while waiting to call {method} on "
                     "{endpoint}".format(method=request.method,
                         endpoint=self.endpoint))
@@ -63,7 +63,7 @@ class RPCClient(common.Endpoint):
                            params=common.debug_log_object_dump(request.params)))
         self.request_poller.register(self.request_sock, zmq.POLLIN)
         if not self.request_poller.poll(self.timeout):
-            self._reconnect_socket() # Drop outgoing message
+            self.on_timeout(request)
             raise TimeoutError("Timed out while getting response to {method} on "
                     "{endpoint}".format(method=request.method,
                         endpoint=self.endpoint))
@@ -84,6 +84,9 @@ class RPCClient(common.Endpoint):
                               endpoint=self.endpoint,
                               result=common.debug_log_object_dump(response.result)))
         return response.result
+
+    def on_timeout(self, req):
+        self._reconnect_socket() # Drop outgoing message
 
     def get_request_method(self, method, notify=False):
         return self.request_method_class(method, client=self, notify=notify)
@@ -111,18 +114,27 @@ class NotifierOnlyPushClient(RPCClient):
     default_socket_type = zmq.PUSH
 
 
-class SubscriptionClient(RPCNotifierClient, threading.Thread):
+class NotificationReceiverClient(RPCNotifierClient, threading.Thread):
 
     on_notification = None
     should_stop = False
     poll_timeout = 1000 # milliseconds
 
     def __init__(self, *args, **kwargs):
-        super(SubscriptionClient, self).__init__(*args, **kwargs)
+        super(NotificationReceiverClient, self).__init__(*args, **kwargs)
+
+        # We use a PAIR socket pair to communicate between the calling
+        # thread and the thread (this class) receiving subscription events.
+        # RPCServer thinks it's talking to the server, but now it's actually
+        # talking to this thread.
         self.request_sock = self.context.socket(zmq.PAIR)
         self.request_sock_endpoint = \
                 "inproc://jsonrpc2-subscription-client-%x" % id(self)
         self.request_sock.bind(self.request_sock_endpoint)
+
+        # This is run automatically, as RPC-style blocking requests will not
+        # get a response otherwise.
+        self.start()
 
     def run(self):
         poller = zmq.Poller()
@@ -138,16 +150,39 @@ class SubscriptionClient(RPCNotifierClient, threading.Thread):
                     socks[thread_pair_sock] == zmq.POLLIN:
                 msg = common.json_rpc_loads(thread_pair_sock.recv())
                 request_id = msg.id
-                self.socket.send(json_rpc_dumps(msg))
+                self.socket.send(common.json_rpc_dumps(msg))
 
             if self.socket in socks and socks[self.socket] == zmq.POLLIN:
-                msg = common.json_rpc_loads(self.socket.recv())
+                msg_parts = self.socket.recv_multipart()
+                msg = common.json_rpc_loads(msg_parts[-1])
                 if msg.id and msg.id == request_id:
-                    thread_pair_sock.send(json_rpc_dumps(msg))
+                    thread_pair_sock.send(common.json_rpc_dumps(msg))
                     request_id = None
-                elif not msg.id and self.on_notification:
-                    self.on_notification(msg)
+                elif not msg.id:
+                    self.logger.debug("<_< Client received notification "
+                                      "\"{method}\" "
+                                      "from subscription on {endpoint}:\n"
+                                      "{result}".format(
+                                          endpoint=self.endpoint,
+                                          method=msg.method,
+                                          result=common.debug_log_object_dump(
+                                              msg.params)
+                                      ))
+                    common.handle_request(self, 'handle_{method}_notification',
+                                          msg)
+
+    def on_timeout(self, *args, **kwargs):
+        self.stop()
+        super(NotificationReceiverClient, self).on_timeout(*args, **kwargs)
+
+    def wait_for_notifications(self):
+        while self.is_alive():
+            try:
+                self.join(self.poll_timeout)
+            except KeyboardInterrupt:
+                break
 
     def stop(self):
         self.should_stop = True
+        self.join()
 

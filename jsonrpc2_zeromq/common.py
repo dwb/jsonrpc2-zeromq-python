@@ -88,6 +88,10 @@ class Request(object):
             data['id'] = self.id
         return data
 
+    @property
+    def method_normalised(self):
+        return self.method.lower().replace('-', '_')
+
 
 class Notification(Request):
 
@@ -108,6 +112,26 @@ class RequestMethod(object):
                     "arguments")
         return self.client.request(Request(self.method, args or kwargs,
                                            notify=self.notify))
+
+
+def handle_request(handler_obj, handler_attr_format, request):
+    handler_id = request.method_normalised
+    handler = getattr(handler_obj,
+                      handler_attr_format.format(method=handler_id), None)
+    if handler is None:
+        raise MethodNotFound()
+
+    try:
+        if isinstance(request.params, (tuple, list)):
+            result = handler(*request.params)
+        elif isinstance(request.params, dict):
+            result = handler(**request.params)
+        else:
+            raise InternalError('Parameters supplied as unexpected type')
+    except TypeError as e:
+        raise InvalidParams(str(e))
+
+    return result
 
 
 class Response(object):
