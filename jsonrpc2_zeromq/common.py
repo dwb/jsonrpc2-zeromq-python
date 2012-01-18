@@ -132,7 +132,8 @@ class Response(object):
                 error=self.error,
                 id=self.id,
                 )
-        return {k: v for k, v in data.iteritems() if v is not None}
+        return {k: v for k, v in data.iteritems() if k == 'result' or
+                                                         v is not None}
 
 
 class RPCErrorMeta(type):

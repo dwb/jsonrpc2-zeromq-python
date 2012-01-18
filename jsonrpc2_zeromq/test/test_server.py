@@ -21,6 +21,9 @@ class RPCTestServer(jsonrpc2_zeromq.RPCServer):
                                 a_str=None):
         return dict(an_int=an_int, a_bool=a_bool, a_float=a_float, a_str=a_str)
 
+    def handle_return_null_method(self):
+        return None
+
 
 class RPCNotificationTestServer(jsonrpc2_zeromq.RPCNotificationServer):
 
@@ -87,6 +90,10 @@ class RPCServerTestCase(BaseServerTestCase):
             pass
         else:
             self.fail("Non-existent method allowed")
+
+    def test_return_null(self):
+        result = self.client.return_null()
+        self.assertEqual(None, result)
 
 
 class RPCNotificationServerTestCase(BaseServerTestCase):
