@@ -3,7 +3,6 @@
 # Please see the LICENSE file in the root of this project for license
 # information.
 
-import pprint
 import threading
 
 import zmq
@@ -65,11 +64,12 @@ class RPCServer(common.Endpoint, threading.Thread):
                 raise common.InvalidRequest()
 
             self.logger.debug("<_< Server received {req_type} \"{method}\""
-                              " on {endpoint} with params:\n  {params}".format(
+                              " on {endpoint} with params:\n{params}".format(
                                   req_type=("method call" if req.id
                                             else "notification"),
                                   method=req.method, endpoint=self.endpoint,
-                                  params=pprint.pformat(req.params)))
+                                  params=common.debug_log_object_dump(
+                                      req.params)))
 
             if (req.is_method and self.allow_methods) or \
                     (req.is_notification and self.allow_notifications):
@@ -114,12 +114,13 @@ class RPCServer(common.Endpoint, threading.Thread):
         if req:
             debug_msg_parts.append("from \"{0}\"".format(req.method))
         debug_msg_parts.append("on {0}:\n".format(self.endpoint))
-        debug_msg_parts.append(' ' +
-            "{0} {1}".format(resp.error['code'], resp.error['message'])
-                if resp.is_error
-            else repr(resp.result))
+        debug_msg_result = ("{indent}{0} {1}".format(
+                resp.error['code'], resp.error['message'],
+                        indent=common.debug_log_object_indent)
+            if resp.is_error
+            else common.debug_log_object_dump(resp.result))
 
-        self.logger.debug(' '.join(debug_msg_parts))
+        self.logger.debug(' '.join(debug_msg_parts) + debug_msg_result)
 
         self.socket.send_multipart(filter(None,
                                           [client_id,

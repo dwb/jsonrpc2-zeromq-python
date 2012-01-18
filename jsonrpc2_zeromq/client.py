@@ -4,7 +4,6 @@
 # information.
 
 import threading
-import pprint
 
 import zmq
 
@@ -42,9 +41,9 @@ class RPCClient(common.Endpoint):
 
     def request(self, request):
         self.logger.debug(">_> Client calling \"{method}\" on {endpoint} "
-                       "with params:\n  {params}".format(method=request.method,
+                       "with params:\n{params}".format(method=request.method,
                            endpoint=self.endpoint,
-                           params=pprint.pformat(request.params)))
+                           params=common.debug_log_object_dump(request.params)))
 
         self.request_poller.register(self.request_sock, zmq.POLLOUT)
         if not self.request_poller.poll(self.timeout):
@@ -61,7 +60,7 @@ class RPCClient(common.Endpoint):
         self.logger.debug("-.- Client waiting for response from {method} "
                        "on {endpoint}".format(method=request.method,
                            endpoint=self.endpoint,
-                           params=pprint.pformat(request.params)))
+                           params=common.debug_log_object_dump(request.params)))
         self.request_poller.register(self.request_sock, zmq.POLLIN)
         if not self.request_poller.poll(self.timeout):
             self._reconnect_socket() # Drop outgoing message
@@ -80,10 +79,10 @@ class RPCClient(common.Endpoint):
             raise response.error_exception(self.error_code_exceptions)
 
         self.logger.debug("<_< Client received from call of \"{method}\""
-                          " on {endpoint}:\n  {result}".format(
+                          " on {endpoint}:\n{result}".format(
                               method=request.method,
                               endpoint=self.endpoint,
-                              result=pprint.pformat(response.result)))
+                              result=common.debug_log_object_dump(response.result)))
         return response.result
 
     def get_request_method(self, method, notify=False):
