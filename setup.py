@@ -7,10 +7,11 @@ from setuptools import setup
 
 description = "Library for JSON-RPC 2.0 over ZeroMQ"
 
+import os
 try:
     long_description = open(os.path.join(os.path.dirname(__file__),
                                          'README.rst')).read()
-except Exception:
+except IOError:
     long_description = description
 
 version = "1.1.0"
