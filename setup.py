@@ -14,7 +14,7 @@ try:
 except IOError:
     long_description = description
 
-version = "1.1.0"
+version = "1.1.1"
 
 setup(
     name = "jsonrpc2-zeromq",
