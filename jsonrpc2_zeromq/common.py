@@ -115,10 +115,10 @@ class RequestMethod(object):
 
 
 def handle_request(handler_obj, handler_attr_format, request):
-    handler_id = request.method_normalised
-    handler = getattr(handler_obj,
-                      handler_attr_format.format(method=handler_id), None)
-    if handler is None:
+    handler_name = handler_attr_format.format(method=request.method_normalised)
+    try:
+        handler = handler_obj.__getattribute__(handler_name)
+    except AttributeError:
         raise MethodNotFound()
 
     try:

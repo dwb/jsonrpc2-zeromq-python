@@ -168,8 +168,18 @@ class NotificationReceiverClient(RPCNotifierClient, threading.Thread):
                                           result=common.debug_log_object_dump(
                                               msg.params)
                                       ))
-                    common.handle_request(self, 'handle_{method}_notification',
-                                          msg)
+
+                    try:
+                        common.handle_request(self,
+                                              'handle_{method}_notification',
+                                               msg)
+                    except common.MethodNotFound:
+                        self.logger.warning("v_v Client has no handler for "
+                                            "\"{method}\" notification from "
+                                            "subscription on {endpoint}".format(
+                                                method=msg.method,
+                                                endpoint=self.endpoint
+                                            ))
 
     def on_timeout(self, *args, **kwargs):
         self.stop()

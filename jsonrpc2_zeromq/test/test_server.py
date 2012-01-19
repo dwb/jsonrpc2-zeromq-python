@@ -21,7 +21,7 @@ test_debug_logger.addHandler(logger_console_handler)
 class BaseServerTestCase(unittest.TestCase):
 
     endpoint = "inproc://jsonrpc2-zeromq-tests"
-    logger = test_debug_logger
+    logger = None
 
     def tearDown(self):
         self.server.stop()
@@ -133,15 +133,21 @@ class NotificationReceiverClientTestCase(BaseServerTestCase):
         self.client.stop()
         return super(NotificationReceiverClientTestCase, self).tearDown()
 
-    def test_subscribe(self):
-        self.client.subscribe()
+    def _test_event_subscription(self, num_notifications, expected_replies,
+                                 method):
+        getattr(self.client, method)(num_notifications)
         self.client.join(
             NotificationReceiverClientTestServer.notification_reply_sleep_time *
-            (NotificationReceiverClientTestServer.num_notification_replies + 1))
+            (num_notifications + 1))
 
-        self.assertEqual(
-            NotificationReceiverClientTestServer.num_notification_replies,
-            self.client.num_notifications_received)
+        self.assertEqual(expected_replies,
+                         self.client.num_notifications_received)
+
+    def test_subscribe(self):
+        self._test_event_subscription(3, 3, "subscribe")
+
+    def test_bad_subscribe(self):
+        self._test_event_subscription(1, 0, "subscribe_bad_event")
 
     def test_timeout(self):
         self.client.timeout = NotificationReceiverClientTestServer.long_time / 10

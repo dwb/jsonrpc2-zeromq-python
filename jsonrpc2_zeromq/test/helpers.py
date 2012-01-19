@@ -48,18 +48,23 @@ class NotificationReceiverClientTestServer(
         jsonrpc2_zeromq.RPCNotificationServer, LongTimeServerMixin):
 
     notification_reply_sleep_time = 0.5
-    num_notification_replies = 3
 
     reply_thread = None
 
-    def _send_back_notifications(self, client_id):
-        for i in xrange(self.num_notification_replies):
+    def _send_back_notifications(self, client_id, method, num_notifications):
+        for i in xrange(num_notifications):
             sleep(self.notification_reply_sleep_time)
-            notification = jsonrpc2_zeromq.common.Request("Event", params=[i],
+            notification = jsonrpc2_zeromq.common.Request(method, params=[i],
                                                           notify=True)
             self.socket.send_multipart(
-                [client_id, "",
-                 jsonrpc2_zeromq.common.json_rpc_dumps(notification)])
+                [client_id, jsonrpc2_zeromq.common.json_rpc_dumps(notification)])
+
+    def _start_sending_notifications_thread(self, client_id, method,
+                                            num_notifications):
+        self.reply_thread = threading.Thread(
+            target=lambda: self._send_back_notifications(client_id, method,
+                                                         num_notifications))
+        self.reply_thread.start()
 
     def _handle_method_and_response(self, client_id, req):
         # Slight hack to keep the client_id for _send_back_notifications
@@ -67,10 +72,13 @@ class NotificationReceiverClientTestServer(
         return super(NotificationReceiverClientTestServer,
                      self)._handle_method_and_response(client_id, req)
 
-    def handle_subscribe_method(self):
-        self.reply_thread = threading.Thread(
-            target=lambda: self._send_back_notifications(self.client_id))
-        self.reply_thread.start()
+    def handle_subscribe_method(self, num_notifications):
+        self._start_sending_notifications_thread(self.client_id, "event",
+                                                 num_notifications)
+
+    def handle_subscribe_bad_event_method(self, num_notifications):
+        self._start_sending_notifications_thread(self.client_id, "bad_event",
+                                                 num_notifications)
 
     def stop(self):
         if self.reply_thread and self.reply_thread.is_alive:
