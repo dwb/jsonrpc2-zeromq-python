@@ -4,6 +4,7 @@
 # information.
 
 import threading
+import errno
 
 import zmq
 
@@ -39,7 +40,13 @@ class RPCServer(common.Endpoint, threading.Thread):
     def run(self):
         self.logger.info("^_^ Server now listening on %s", self.endpoint)
         while not self.should_stop:
-            self._handle_one_message()
+            try:
+                self._handle_one_message()
+            except zmq.ZMQError as e:
+                if e.errno == errno.EINTR:
+                    continue
+                else:
+                    raise
 
     def _handle_one_message(self):
         req = client_id = None
