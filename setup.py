@@ -1,5 +1,5 @@
 # Part of the jsonrpc2-zeromq-python project.
-# (c) 2012 Wireless Innovation Ltd, All Rights Reserved.
+# (c) 2012 Dan Brown, All Rights Reserved.
 # Please see the LICENSE file in the root of this project for license
 # information.
 
@@ -21,8 +21,8 @@ setup(
     version = version,
     description = description,
     long_description = long_description,
-    url = "https://github.com/wiltd/python-jsonrpc2-zeromq",
-    download_url = "https://github.com/wiltd/"
+    url = "https://github.com/dwb/python-jsonrpc2-zeromq",
+    download_url = "https://github.com/dwb/"
                        "jsonrpc2-zeromq-python/tarball/v%s" % (version,),
     classifiers = [
         "Programming Language :: Python :: 2.7",
@@ -31,7 +31,8 @@ setup(
         "License :: OSI Approved :: BSD License",
         ],
     author = "Dan Brown",
-    author_email = "dan@danwb.net",
+    author_email = "dan@stompydan.net",
+    license = "License :: OSI Approved :: BSD License",
     packages = ["jsonrpc2_zeromq"],
     install_requires=[
         "distribute",
