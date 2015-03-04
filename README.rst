@@ -92,4 +92,4 @@ Currently there are some helpful messages outputted at the ``DEBUG`` level, serv
 Testing
 -------
 
-Tests are included. Install `nose <http://readthedocs.org/docs/nose/>`_ and just run ``nosetests`` in the project root.
+Tests are included. Run ``python setup.py test`` in the project root.
