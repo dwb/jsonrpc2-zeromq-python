@@ -2,6 +2,10 @@
 JSON-RPC 2.0 Over ZeroMQ
 ========================
 
+.. image:: https://travis-ci.org/dwb/jsonrpc2-zeromq-python.svg?branch=master
+   :alt: Travis build status
+   :target: https://travis-ci.org/dwb/jsonrpc2-zeromq-python
+
 Written by `Dan Brown <mailto:dan@stompydan.net>`_. See the the LICENSE file for licensing information.
 
 This is a library in Python enabling `JSON-RPC 2.0 <http://www.jsonrpc.org/spec.html>`_ over `ZeroMQ <http://zeromq.org/>`_. It includes support for both clients and servers.
