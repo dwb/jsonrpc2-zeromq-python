@@ -35,8 +35,7 @@ setup(
     license = "License :: OSI Approved :: BSD License",
     packages = ["jsonrpc2_zeromq"],
     install_requires=[
-        "distribute",
-        "pyzmq<2.2",
+        "setuptools",
+        "pyzmq>=2.1.11,<15",
         ],
     )
-
