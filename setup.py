@@ -38,4 +38,8 @@ setup(
         "setuptools",
         "pyzmq>=2.1.11,<15",
         ],
+    tests_require=[
+        "nose==1.3.4",
+        ],
+    test_suite="nose.collector",
     )
