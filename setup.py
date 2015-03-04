@@ -14,7 +14,7 @@ try:
 except IOError:
     long_description = description
 
-version = "1.1.1"
+version = "1.1.2"
 
 setup(
     name = "jsonrpc2-zeromq",
@@ -22,8 +22,9 @@ setup(
     description = description,
     long_description = long_description,
     url = "https://github.com/dwb/python-jsonrpc2-zeromq",
-    download_url = "https://github.com/dwb/"
-                       "jsonrpc2-zeromq-python/tarball/v%s" % (version,),
+    download_url = ("https://github.com/dwb/"
+                    "jsonrpc2-zeromq-python/archive/v{}.tar.gz".
+                    format(version)),
     classifiers = [
         "Programming Language :: Python :: 2.7",
         "Development Status :: 5 - Production/Stable",
