@@ -3,12 +3,21 @@
 # Please see the LICENSE file in the root of this project for license
 # information.
 
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # NOQA
+from past.utils import old_div
+
 import unittest
 import logging
 
 import jsonrpc2_zeromq
 
-from .helpers import *
+from .helpers import *  # NOQA FIXME: probably addreess this
 
 
 test_debug_logger = logging.getLogger('jsonrpc2_zeromq_test')
@@ -27,7 +36,7 @@ class BaseServerTestCase(unittest.TestCase):
         self.server.stop()
         self.server.join()
         self.server.close()
-        sleep(0.1) # Wait for socket to actually close
+        sleep(0.1)  # Wait for socket to actually close
 
 
 class RPCServerTestCase(BaseServerTestCase):
@@ -69,10 +78,10 @@ class RPCServerTestCase(BaseServerTestCase):
         self.assertEqual(None, result)
 
     def test_timeout(self):
-        self.client.timeout = RPCTestServer.long_time / 10
+        self.client.timeout = old_div(RPCTestServer.long_time, 10)
         try:
             self.client.take_a_long_time()
-        except jsonrpc2_zeromq.TimeoutError:
+        except jsonrpc2_zeromq.client.TimeoutError:
             pass
         else:
             self.fail("Client didn't timeout")
@@ -109,14 +118,15 @@ class NotificationOnlyPullServerTestCase(BaseServerTestCase):
         self.server.daemon = True
         self.server.start()
         self.client = jsonrpc2_zeromq.NotifierOnlyPushClient(
-                            endpoint=self.endpoint, logger=self.logger)
+            endpoint=self.endpoint, logger=self.logger)
 
     def test_event(self):
         self.client.notify.event("fell over", "quickly")
 
     def test_many_events(self):
-        for i in xrange(100):
-            self.client.notify.event("balloon launched", "number {0}".format(i))
+        for i in range(100):
+            self.client.notify.event("balloon launched", "number {0}".
+                                     format(i))
 
 
 class NotificationReceiverClientTestCase(BaseServerTestCase):
@@ -137,8 +147,8 @@ class NotificationReceiverClientTestCase(BaseServerTestCase):
                                  method):
         getattr(self.client, method)(num_notifications)
         self.client.join(
-            NotificationReceiverClientTestServer.notification_reply_sleep_time *
-            (num_notifications + 1))
+            NotificationReceiverClientTestServer.notification_reply_sleep_time
+            * (num_notifications + 1))
 
         self.assertEqual(expected_replies,
                          self.client.num_notifications_received)
@@ -150,10 +160,11 @@ class NotificationReceiverClientTestCase(BaseServerTestCase):
         self._test_event_subscription(1, 0, "subscribe_bad_event")
 
     def test_timeout(self):
-        self.client.timeout = NotificationReceiverClientTestServer.long_time / 10
+        self.client.timeout = old_div(
+            NotificationReceiverClientTestServer.long_time, 10)
         try:
             self.client.take_a_long_time()
-        except jsonrpc2_zeromq.TimeoutError:
+        except jsonrpc2_zeromq.client.TimeoutError:
             pass
         else:
             self.fail("Client didn't timeout")

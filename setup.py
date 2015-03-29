@@ -17,14 +17,14 @@ except IOError:
 version = "1.1.2"
 
 setup(
-    name = "jsonrpc2-zeromq",
-    version = version,
-    description = description,
-    long_description = long_description,
-    url = "https://github.com/dwb/python-jsonrpc2-zeromq",
-    download_url = ("https://github.com/dwb/"
-                    "jsonrpc2-zeromq-python/archive/v{}.tar.gz".
-                    format(version)),
+    name="jsonrpc2-zeromq",
+    version=version,
+    description=description,
+    long_description=long_description,
+    url="https://github.com/dwb/python-jsonrpc2-zeromq",
+    download_url=("https://github.com/dwb/"
+                  "jsonrpc2-zeromq-python/archive/v{}.tar.gz".
+                  format(version)),
     classifiers = [
         "Programming Language :: Python :: 2.7",
         "Development Status :: 5 - Production/Stable",
@@ -38,6 +38,7 @@ setup(
     install_requires=[
         "setuptools",
         "pyzmq>=2.1.11,<15",
+        "future>=0.14.3",
         ],
     tests_require=[
         "nose==1.3.4",

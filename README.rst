@@ -12,6 +12,8 @@ This is a library in Python enabling `JSON-RPC 2.0 <http://www.jsonrpc.org/spec.
 
 This is packaged as a standard Python project, so just install using ``python setup.py install``, or with `pip <http://www.pip-installer.org/>`_.
 
+Supports Python 2.7 and 3.3+.
+
 Servers
 -------
 

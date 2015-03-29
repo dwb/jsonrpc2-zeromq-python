@@ -3,7 +3,16 @@
 # Please see the LICENSE file in the root of this project for license
 # information.
 
-import sys
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+from future.utils import with_metaclass, native_str_to_bytes, \
+    bytes_to_native_str
+standard_library.install_aliases()
+from builtins import *  # NOQA
+
 import uuid
 import json
 import re
@@ -24,9 +33,11 @@ package_logger.addHandler(logging.NullHandler())
 
 debug_log_object_indent = ' ' * DEBUG_LOG_OBJECT_INDENT_LEN
 
+
 def debug_log_object_dump(obj):
     return re.sub(r'(^|\n)', r'\1' + debug_log_object_indent,
-                  pprint.pformat(obj, width=(80 - DEBUG_LOG_OBJECT_INDENT_LEN)))
+                  pprint.pformat(obj,
+                                 width=(80 - DEBUG_LOG_OBJECT_INDENT_LEN)))
 
 
 def _json_default(o):
@@ -38,26 +49,31 @@ def _json_default(o):
     else:
         raise TypeError
 
+
 def _parse_rpc_message(msg):
-    msg_fields = frozenset(msg.keys())
+    msg_fields = frozenset(list(msg.keys()))
     if msg_fields.issuperset(frozenset(['jsonrpc', 'method'])):
         return Request(msg['method'], msg.get('params', None),
-                id_=msg.get('id', None))
+                       id_=msg.get('id', None))
     elif msg_fields.issuperset(frozenset(['jsonrpc', 'id'])) and \
             ('result' in msg_fields or 'error' in msg_fields):
         return Response(msg.get('result', None), msg.get('error', None),
-                msg['id'])
+                        msg['id'])
     else:
         return msg
 
+
 def json_rpc_dumps(o):
-    return json.dumps(o, default=_json_default)
+    return native_str_to_bytes(json.dumps(o, default=_json_default,
+                                          ensure_ascii=True))
+
 
 def json_rpc_loads(s):
-    return json.loads(s, object_hook=_parse_rpc_message)
+    return json.loads(bytes_to_native_str(s), object_hook=_parse_rpc_message)
 
 
 _GenerateID = object()
+
 
 class Request(object):
 
@@ -81,9 +97,8 @@ class Request(object):
 
     def to_dict(self):
         data = dict(jsonrpc=JSON_RPC_VERSION,
-                method=self.method,
-                params=self.params,
-                )
+                    method=self.method,
+                    params=self.params)
         if self.id:
             data['id'] = self.id
         return data
@@ -109,7 +124,7 @@ class RequestMethod(object):
     def __call__(self, *args, **kwargs):
         if args and kwargs:
             raise ValueError("Cannot be called with both positional and named "
-                    "arguments")
+                             "arguments")
         return self.client.request(Request(self.method, args or kwargs,
                                            notify=self.notify))
 
@@ -152,12 +167,11 @@ class Response(object):
 
     def to_dict(self):
         data = dict(jsonrpc=JSON_RPC_VERSION,
-                result=self.result,
-                error=self.error,
-                id=self.id,
-                )
-        return {k: v for k, v in data.iteritems() if k == 'result' or
-                                                         v is not None}
+                    result=self.result,
+                    error=self.error,
+                    id=self.id)
+        return {k: v for k, v in list(data.items()) if k == 'result' or
+                v is not None}
 
 
 class RPCErrorMeta(type):
@@ -171,9 +185,7 @@ class RPCErrorMeta(type):
         return out
 
 
-class RPCError(Exception):
-    __metaclass__ = RPCErrorMeta
-
+class RPCError(with_metaclass(RPCErrorMeta, Exception)):
     error_code = None
     class_for_error_code = {}
 
@@ -198,27 +210,38 @@ class RPCError(Exception):
         return out
 
     def to_response(self, id_=None):
-        return Response(None, dict(code=self.error_code, message=self.error_msg,
-                                   data=self.error_data), id_)
+        return Response(None,
+                        dict(code=self.error_code, message=self.error_msg,
+                             data=self.error_data),
+                        id_)
 
 
 class ParseError(RPCError):
     error_code = -32700
 
+
 class InvalidRequest(RPCError):
     error_code = -32600
+
 
 class MethodNotFound(RPCError):
     error_code = -32601
 
+
 class InvalidParams(RPCError):
     error_code = -32602
+
 
 class InternalError(RPCError):
     error_code = -32603
 
-class ServerError(RPCError): pass
-class ApplicationError(RPCError): pass
+
+class ServerError(RPCError):
+    pass
+
+
+class ApplicationError(RPCError):
+    pass
 
 
 def rpc_exception_class_for_code(code, extra_code_mapping=None):
@@ -262,4 +285,3 @@ class Endpoint(object):
 
     def close(self):
         self.socket.close()
-

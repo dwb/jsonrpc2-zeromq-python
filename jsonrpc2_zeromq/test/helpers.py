@@ -3,6 +3,15 @@
 # Please see the LICENSE file in the root of this project for license
 # information.
 
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # NOQA
+from past.utils import old_div
+
 from time import sleep
 import threading
 
@@ -12,10 +21,10 @@ import jsonrpc2_zeromq.common
 
 class LongTimeServerMixin(object):
 
-    long_time = 500 # milliseconds
+    long_time = 500  # milliseconds
 
     def handle_take_a_long_time_method(self):
-        sleep(self.long_time / 1000.0)
+        sleep(old_div(self.long_time, 1000.0))
 
 
 class RPCTestServer(jsonrpc2_zeromq.RPCServer, LongTimeServerMixin):
@@ -37,7 +46,8 @@ class RPCNotificationTestServer(jsonrpc2_zeromq.RPCNotificationServer):
         return msg
 
 
-class NotificationOnlyPullTestServer(jsonrpc2_zeromq.NotificationOnlyPullServer):
+class NotificationOnlyPullTestServer(
+        jsonrpc2_zeromq.NotificationOnlyPullServer):
 
     def handle_event_method(self, event_type, event_value):
         # Do things!
@@ -52,12 +62,13 @@ class NotificationReceiverClientTestServer(
     reply_thread = None
 
     def _send_back_notifications(self, client_id, method, num_notifications):
-        for i in xrange(num_notifications):
+        for i in range(num_notifications):
             sleep(self.notification_reply_sleep_time)
             notification = jsonrpc2_zeromq.common.Request(method, params=[i],
                                                           notify=True)
             self.socket.send_multipart(
-                [client_id, jsonrpc2_zeromq.common.json_rpc_dumps(notification)])
+                [client_id,
+                 jsonrpc2_zeromq.common.json_rpc_dumps(notification)])
 
     def _start_sending_notifications_thread(self, client_id, method,
                                             num_notifications):
@@ -86,10 +97,10 @@ class NotificationReceiverClientTestServer(
         return super(NotificationReceiverClientTestServer, self).stop()
 
 
-class NotificationReceiverTestClient(jsonrpc2_zeromq.NotificationReceiverClient):
+class NotificationReceiverTestClient(
+        jsonrpc2_zeromq.NotificationReceiverClient):
 
     num_notifications_received = 0
 
     def handle_event_notification(self, num):
         self.num_notifications_received += 1
-

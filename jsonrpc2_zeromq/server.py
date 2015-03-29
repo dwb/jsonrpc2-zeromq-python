@@ -3,6 +3,14 @@
 # Please see the LICENSE file in the root of this project for license
 # information.
 
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *  # NOQA
+
 import threading
 import errno
 
@@ -27,8 +35,8 @@ class RPCServer(common.Endpoint, threading.Thread):
 
     def __init__(self, endpoint, context=None, timeout=1000, socket_type=None,
                  logger=None):
-        super(RPCServer, self).__init__(endpoint, socket_type, timeout, context,
-                                        logger=logger)
+        super(RPCServer, self).__init__(endpoint, socket_type, timeout,
+                                        context, logger=logger)
         self.socket = self.context.socket(self.socket_type)
         self.socket.bind(self.endpoint)
         self.poller = zmq.Poller()
@@ -48,6 +56,7 @@ class RPCServer(common.Endpoint, threading.Thread):
                 else:
                     raise
 
+    # TODO: decrease complexity
     def _handle_one_message(self):
         req = client_id = None
 
@@ -58,7 +67,7 @@ class RPCServer(common.Endpoint, threading.Thread):
         try:
             if len(req_parts) > 1:
                 client_id, req = req_parts[0], req_parts[1:]
-                req = ''.join(req)
+                req = b''.join(req)
             else:
                 req = req_parts[0]
 
@@ -105,7 +114,8 @@ class RPCServer(common.Endpoint, threading.Thread):
 
     def _send_response(self, client_id, req, resp):
         # Notifications must not return anything
-        if req and req.is_notification: return
+        if req and req.is_notification:
+            return
 
         debug_msg_parts = [">_> Server sending"]
         debug_msg_parts.append("error" if resp.is_error else "return")
@@ -113,16 +123,14 @@ class RPCServer(common.Endpoint, threading.Thread):
             debug_msg_parts.append("from \"{0}\"".format(req.method))
         debug_msg_parts.append("on {0}:\n".format(self.endpoint))
         debug_msg_result = ("{indent}{0} {1}".format(
-                resp.error['code'], resp.error['message'],
-                        indent=common.debug_log_object_indent)
-            if resp.is_error
+            resp.error['code'], resp.error['message'],
+            indent=common.debug_log_object_indent) if resp.is_error
             else common.debug_log_object_dump(resp.result))
 
         self.logger.debug(' '.join(debug_msg_parts) + debug_msg_result)
 
-        self.socket.send_multipart(filter(None,
-                                          [client_id,
-                                           common.json_rpc_dumps(resp)]))
+        self.socket.send_multipart(
+            [_f for _f in [client_id, common.json_rpc_dumps(resp)] if _f])
 
 
 class RPCNotificationServer(RPCServer):
@@ -135,4 +143,3 @@ class NotificationOnlyPullServer(RPCNotificationServer):
 
     default_socket_type = zmq.PULL
     allow_methods = False
-
