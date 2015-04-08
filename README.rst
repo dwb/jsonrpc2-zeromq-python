@@ -95,3 +95,12 @@ Testing
 -------
 
 Tests are included. Run ``python setup.py test`` in the project root.
+
+History
+-------
+
+2.0
+    * Python 3.3+ support
+1.1.2
+    * Allow newer (v14) pyzmq.
+    * Don't raise EINTR in server recv loop.
