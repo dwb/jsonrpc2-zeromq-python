@@ -14,7 +14,7 @@ try:
 except IOError:
     long_description = description
 
-version = "1.1.2"
+version = "2.0.0"
 
 setup(
     name="jsonrpc2-zeromq",
@@ -27,6 +27,8 @@ setup(
                   format(version)),
     classifiers = [
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
