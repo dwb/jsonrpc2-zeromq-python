@@ -8,13 +8,16 @@ from setuptools import setup
 description = "Library for JSON-RPC 2.0 over ZeroMQ"
 
 import os
+import io
+
 try:
-    long_description = open(os.path.join(os.path.dirname(__file__),
-                                         'README.rst')).read()
+    with io.open(os.path.join(os.path.dirname(__file__),
+                              'README.rst'), encoding='utf-8') as f:
+        long_description = f.read()
 except IOError:
     long_description = description
 
-version = "2.0.0"
+version = "2.0.1"
 
 setup(
     name="jsonrpc2-zeromq",
