@@ -86,6 +86,18 @@ class RPCServerTestCase(BaseServerTestCase):
         else:
             self.fail("Client didn't timeout")
 
+    def test_invalid_type(self):
+
+        class Cheese:
+            pass
+
+        try:
+            self.client.echo(Cheese())
+        except TypeError, e:
+            self.assertTrue("not JSON serializable" in str(e))
+        else:
+            self.fail("Client didn't raise TypeError on invalid type")
+
 
 class RPCNotificationServerTestCase(BaseServerTestCase):
 
