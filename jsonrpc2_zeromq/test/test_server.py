@@ -93,7 +93,7 @@ class RPCServerTestCase(BaseServerTestCase):
 
         try:
             self.client.echo(Cheese())
-        except TypeError, e:
+        except TypeError as e:
             self.assertTrue("not JSON serializable" in str(e))
         else:
             self.fail("Client didn't raise TypeError on invalid type")
