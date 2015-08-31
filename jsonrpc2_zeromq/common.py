@@ -47,7 +47,7 @@ def _json_default(o):
         # Yes, UTC support only for now.
         return o.replace(microsecond=0).isoformat() + 'Z'
     else:
-        raise TypeError
+        raise TypeError(repr(o) + " is not JSON serializable")
 
 
 def _parse_rpc_message(msg):
