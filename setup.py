@@ -32,6 +32,8 @@ setup(
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
@@ -42,11 +44,11 @@ setup(
     packages = ["jsonrpc2_zeromq"],
     install_requires=[
         "setuptools",
-        "pyzmq>=2.1.11,<15",
+        "pyzmq>=2.1.11,<17",
         "future>=0.14.3",
         ],
     tests_require=[
-        "nose==1.3.4",
+        "nose>=1.3.4,<2",
         ],
     test_suite="nose.collector",
     )

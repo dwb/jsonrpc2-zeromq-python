@@ -4,4 +4,6 @@ python:
   # - "3.2" # `future` library doesn't support 3.2, sorry. Patches welcome.
   - "3.3"
   - "3.4"
+  - "3.5"
+  - "3.6"
 script: "python setup.py test"
